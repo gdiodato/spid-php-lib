@@ -8,7 +8,12 @@ use Italia\Spid\Spid\Saml;
 
 class Response implements ResponseInterface
 {
-
+    private static $authnContextClassRefValues = [
+        'https://www.spid.gov.it/SpidL1',
+        'https://www.spid.gov.it/SpidL2',
+        'https://www.spid.gov.it/SpidL3'
+    ];
+    
     private $saml;
 
     public function __construct(Saml $saml)
@@ -22,7 +27,10 @@ class Response implements ResponseInterface
             $this->saml->settings['accepted_clock_skew_seconds'] : 0;
 
         $root = $xml->getElementsByTagName('Response')->item(0);
-
+        
+        if (!$root) {
+            throw new \Exception("Missing Response");
+        }
         if ($root->getAttribute('Version') == "") {
             throw new \Exception("Missing Version attribute");
         } elseif ($root->getAttribute('Version') != '2.0') {
@@ -89,6 +97,12 @@ class Response implements ResponseInterface
                 'urn:oasis:names:tc:SAML:2.0:nameid-format:entity') {
                 throw new \Exception("Invalid Issuer attribute, expected 'urn:oasis:names:tc:SAML:2.0:nameid-format:" .
                 "entity'" . " but received " . $xml->getElementsByTagName('Issuer')->item(1)->getAttribute('Format'));
+            }
+            
+            if ($xml->getElementsByTagName('Subject')->length == 0) {
+                throw new \Exception("Missing Subject element");
+            } elseif (!$this->validateHasSubElements($xml->getElementsByTagName('Subject')->item(0))) {
+                throw new \Exception("Unspecified Subject element");
             }
 
             if ($xml->getElementsByTagName('Conditions')->length == 0) {
@@ -178,8 +192,16 @@ class Response implements ResponseInterface
             throw new \Exception("Missing StatusCode element");
         } elseif ($xml->getElementsByTagName('StatusCode')->item(0)->getAttribute('Value') ==
             'urn:oasis:names:tc:SAML:2.0:status:Success') {
-            if ($hasAssertion && $xml->getElementsByTagName('AuthnStatement')->length <= 0) {
-                throw new \Exception("Missing AuthnStatement element");
+            if ($hasAssertion) {
+                if ($xml->getElementsByTagName('AuthnStatement')->length <= 0) {
+                    throw new \Exception("Missing AuthnStatement element");
+                }
+                if ($xml->getElementsByTagName('AuthnContextClassRef')->length == 0) {
+                    throw new \Exception("Missing AuthnContextClassRef element");
+                } elseif (!$this->validateAuthnContextClassRefValue(
+                    $xml->getElementsByTagName('AuthnContextClassRef')->item(0)->nodeValue)) {
+                        throw new \Exception("Invalid AuthnContextClassRef value");
+                }
             }
         } elseif ($xml->getElementsByTagName('StatusCode')->item(0)->getAttribute('Value') !=
             'urn:oasis:names:tc:SAML:2.0:status:Success') {
@@ -223,6 +245,22 @@ class Response implements ResponseInterface
         }
     }
 
+    private function validateHasSubElements($parent)
+    {
+        foreach ($parent->childNodes as $node) {
+            if ($node->nodeType == XML_ELEMENT_NODE) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    private function validateAuthnContextClassRefValue($value)
+    {
+        return in_array($value, self::$authnContextClassRefValues);
+    }
+    
     private function spidSession(\DOMDocument $xml)
     {
         $session = new Session();
