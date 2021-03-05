@@ -33,9 +33,9 @@ class Base
     {
         $compressed = gzdeflate($this->xml);
         $parameters['SAMLRequest'] = base64_encode($compressed);
-        $parameters['RelayState'] = is_null($redirectTo) ? (isset($_SERVER['HTTPS'])
+        $parameters['RelayState'] = base64_encode(is_null($redirectTo) ? (isset($_SERVER['HTTPS'])
             && $_SERVER['HTTPS'] === 'on' ? "https" : "http") .
-            "//{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}" : $redirectTo;
+            "//{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}" : $redirectTo);
         $parameters['SigAlg'] = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256';
         $parameters['Signature'] = SignatureUtils::signUrl(
             $parameters['SAMLRequest'],
@@ -52,9 +52,9 @@ class Base
     {
         $SAMLRequest = base64_encode($this->xml);
 
-        $relayState = is_null($redirectTo) ? (isset($_SERVER['HTTPS']) &&
+        $relayState = base64_encode(is_null($redirectTo) ? (isset($_SERVER['HTTPS']) &&
             $_SERVER['HTTPS'] === 'on' ? "https" : "http") .
-            "//{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}" : $redirectTo;
+            "//{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}" : $redirectTo);
         $relayState = null;
         return <<<HTML
 <html>
