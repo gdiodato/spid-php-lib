@@ -89,7 +89,10 @@ class Response implements ResponseInterface
             } elseif (strtotime($xml->getElementsByTagName('Assertion')->item(0)->getAttribute('IssueInstant')) >
                 strtotime('now') + $accepted_clock_skew_seconds) {
                 throw new \Exception("IssueInstant attribute on Assertion is in the future");
-            }
+            }/* elseif (strtotime($xml->getElementsByTagName('Assertion')->item(0)->getAttribute('IssueInstant')) <= 
+                strtotime('now') - $accepted_clock_skew_seconds) {
+                throw new \Exception("IssueInstant attribute on Assertion is in the past");
+            }*/
 
             // check item 1, this must be the Issuer element child of Assertion
             if ($hasAssertion && $xml->getElementsByTagName('Issuer')->item(1)->nodeValue != $_SESSION['idpEntityId']) {
@@ -143,7 +146,9 @@ class Response implements ResponseInterface
 
             if ($xml->getElementsByTagName('NameID')->length == 0) {
                 throw new \Exception("Missing NameID attribute");
-            } elseif ($xml->getElementsByTagName('NameID')->item(0)->getAttribute('Format') !=
+                //Se ci metto il controllo commentato sotto mi si logga! (??)
+            } elseif (/*$xml->getElementsByTagName('NameID')->item(0)->hasAttribute('Format')
+                &&*/$xml->getElementsByTagName('NameID')->item(0)->getAttribute('Format') !=
                 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient') {
                 throw new \Exception("Invalid NameID attribute, expected " .
                 "'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'" . " but received " .
@@ -154,7 +159,9 @@ class Response implements ResponseInterface
                     " but received " . $xml->getElementsByTagName('NameID')->item(0)->getAttribute('NameQualifier'));
             }
 
-            if ($xml->getElementsByTagName('SubjectConfirmationData')->length == 0) {
+            if ($xml->getElementsByTagName('SubjectConfirmation')->length == 0) {
+                throw new \Exception("Missing SubjectConfirmation attribute");
+            } elseif ($xml->getElementsByTagName('SubjectConfirmationData')->length == 0) {
                 throw new \Exception("Missing SubjectConfirmationData attribute");
             } elseif ($xml->getElementsByTagName('SubjectConfirmationData')->item(0)->getAttribute('InResponseTo') !=
                 $_SESSION['RequestID']) {
