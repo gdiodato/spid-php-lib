@@ -192,6 +192,8 @@ class Response implements ResponseInterface
             throw new \Exception("Missing Status element");
         } elseif ($xml->getElementsByTagName('StatusCode')->item(0) == null) {
             throw new \Exception("Missing StatusCode element");
+        } elseif ($xml->getElementsByTagName('StatusCode')->item(0)->getAttribute('Value') == "") {
+            throw new \Exception("Invalid StatusCode value");
         } elseif ($xml->getElementsByTagName('StatusCode')->item(0)->getAttribute('Value') ==
             'urn:oasis:names:tc:SAML:2.0:status:Success') {
             if ($hasAssertion) {
