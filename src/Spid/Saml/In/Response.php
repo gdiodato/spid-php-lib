@@ -207,6 +207,9 @@ class Response implements ResponseInterface
                 if ($xml->getElementsByTagName('AuthnStatement')->length <= 0) {
                     throw new \Exception("Missing AuthnStatement element");
                 }
+                if ($xml->getElementsByTagName('AuthnContext')->length == 0) {
+                    throw new \Exception("Missing AuthnContext element");
+                }
                 if ($xml->getElementsByTagName('AuthnContextClassRef')->length == 0) {
                     throw new \Exception("Missing AuthnContextClassRef element");
                 } elseif (!$this->validateAuthnContextClassRefValue(
