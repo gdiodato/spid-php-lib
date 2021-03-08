@@ -42,6 +42,8 @@ class Response implements ResponseInterface
             throw new \Exception("Invalid IssueInstant attribute on Response");
         } elseif (strtotime($root->getAttribute('IssueInstant')) > strtotime('now') + $accepted_clock_skew_seconds) {
             throw new \Exception("IssueInstant attribute on Response is in the future");
+        } elseif (strtotime($root->getAttribute('IssueInstant')) <= strtotime('now') - $accepted_clock_skew_seconds) {
+            throw new \Exception("IssueInstant attribute on Response is in the past");
         }
 
         if ($root->getAttribute('InResponseTo') == "" || !isset($_SESSION['RequestID'])) {
