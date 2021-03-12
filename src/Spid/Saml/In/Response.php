@@ -31,6 +31,9 @@ class Response implements ResponseInterface
         if (!$root) {
             throw new \Exception("Missing Response");
         }
+        if ($root->getAttribute('ID') == "" || $root->getAttribute('ID') == null) {
+                throw new \Exception("Missing ID attribute on Response");
+        }
         if ($root->getAttribute('Version') == "") {
             throw new \Exception("Missing Version attribute");
         } elseif ($root->getAttribute('Version') != '2.0') {
